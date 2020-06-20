@@ -58,8 +58,6 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 		instance = self.get_object()
 		self.perform_destroy(instance)
-		# self.scheduler.remove_job(booking_key+"_start")
-		# self.scheduler.remove_job(booking_key+"_end")
 
 		return Response(status=status.HTTP_204_NO_CONTENT)
 
