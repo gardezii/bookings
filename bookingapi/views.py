@@ -1,11 +1,13 @@
 from rest_framework import viewsets
 from rest_framework import status
-from rest_framework.response import Response
-from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore
-from datetime import datetime, timezone, timedelta
 from dateutil.parser import parse
-import time, pytz
+from rest_framework.response import Response
+from rest_framework_api_key.permissions import HasAPIKey
+from django_apscheduler.jobstores import DjangoJobStore
+from apscheduler.schedulers.background import BackgroundScheduler
+from rest_framework_api_key.permissions import HasAPIKey
+
+import pytz
 
 from .serializers import BookingSerializer
 from .models import Booking
@@ -18,6 +20,8 @@ class BookingViewSet(viewsets.ModelViewSet):
 	scheduler = BackgroundScheduler()
 	scheduler.add_jobstore(DjangoJobStore(), "default")
 	scheduler.start()
+	permission_classes = [HasAPIKey]
+
 
 	def create(self, request, *args, **kwargs):
 		booking_key = request.data["bookingKey"]
@@ -92,7 +96,3 @@ class BookingViewSet(viewsets.ModelViewSet):
 			new_hour_value = 12 + updated_hour
         
 		return new_hour_value
-
-
-
-
