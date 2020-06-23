@@ -65,8 +65,13 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 		booking_key = request.data["bookingKey"]
 
-		self.scheduler.remove_job(booking_key+"_start")
-		self.scheduler.remove_job(booking_key+"_end")
+		start_job = self.scheduler.get_job(booking_key+"_start")
+		if start_job != None:
+			self.scheduler.remove_job(booking_key+"_start")
+
+		end_job = self.scheduler.get_job(booking_key+"_end")
+		if end_job != None:
+			self.scheduler.remove_job(booking_key+"_end")
 
 		instance = self.get_object()
 		self.perform_destroy(instance)
