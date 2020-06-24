@@ -6,7 +6,7 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework_api_key.models import APIKey
 
 
-from django_apscheduler.jobstores import DjangoJobStore
+from django_apscheduler.jobstores import DjangoJobStore, register_events
 from apscheduler.schedulers.background import BackgroundScheduler
 
 from mysite.scheduler.scheduler_jobs import TurnlightOnTask, TurnlightOffTask
@@ -21,6 +21,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 	serializer_class = BookingSerializer
 	scheduler = BackgroundScheduler()
 	scheduler.add_jobstore(DjangoJobStore(), "default")
+
 	scheduler.start()
 	permission_classes = [HasAPIKey]
 
@@ -43,6 +44,9 @@ class BookingViewSet(viewsets.ModelViewSet):
 		return super(BookingViewSet, self).create(request, *args, **kwargs)
 
 	def update(self, request, *args, **kwargs):
+		if Booking.objects.filter(id = kwargs['pk']).count() == 0: 
+			return Response(data={"detail": "Not found."},status=status.HTTP_404_NOT_FOUND)
+
 		serializer = self.get_serializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
 
@@ -68,9 +72,10 @@ class BookingViewSet(viewsets.ModelViewSet):
 		return super(BookingViewSet, self).update(request, *args, **kwargs)
 
 	def destroy(self, request, *args, **kwargs):
+		if Booking.objects.filter(id = kwargs['pk']).count() == 0: 
+			return Response(data={"detail": "Not found."},status=status.HTTP_404_NOT_FOUND)
 
 		booking_key = request.data.get("bookingKey")
-
 		if booking_key is None: 
 			return Response(data={"bookingKey": ["This field is required"]},status=status.HTTP_400_BAD_REQUEST)
 
