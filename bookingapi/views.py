@@ -26,13 +26,16 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 
 	def create(self, request, *args, **kwargs):
-		booking_key = request.data["bookingKey"]
+		serializer = self.get_serializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+
+		booking_key = request.data.get("bookingKey")
 		key = get_Authorization_token(request)
 
 		ifttt_key = APIKey.objects.get_from_key(key)
 
-		start_date = formatDateAccordingToHour(request.data["date"], request.data["start"])
-		end_date = formatDateAccordingToHour(request.data["date"], request.data["end"])
+		start_date = formatDateAccordingToHour(request.data.get("date"), request.data.get("start"))
+		end_date = formatDateAccordingToHour(request.data.get("date"), request.data.get("end"))
 
 		data = self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key }, start_date=start_date, end_date=start_date, id=booking_key+"_start")
 		data = self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key }, start_date=end_date, end_date=end_date, id=booking_key+"_end")
@@ -40,12 +43,15 @@ class BookingViewSet(viewsets.ModelViewSet):
 		return super(BookingViewSet, self).create(request, *args, **kwargs)
 
 	def update(self, request, *args, **kwargs):
-		booking_key = request.data["bookingKey"]
+		serializer = self.get_serializer(data=request.data)
+		serializer.is_valid(raise_exception=True)
+
+		booking_key = request.data.get("bookingKey")
 		key = get_Authorization_token(request)
 		
 		ifttt_key = APIKey.objects.get_from_key(key)
 		
-		start_date = formatDateAccordingToHour(request.data["date"], request.data["start"])
+		start_date = formatDateAccordingToHour(request.data.get("date"), request.data.get("start"))
 		start_job = self.scheduler.get_job(booking_key+"_start")
 		if start_job != None:
 			# removing job becasue we cannot update the starte and end date due to which 
@@ -53,7 +59,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 			self.scheduler.remove_job(booking_key+"_start")
 			self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key }, start_date=start_date, end_date=start_date, id=booking_key+"_start")
 		
-		end_date = formatDateAccordingToHour(request.data["date"], request.data["end"])
+		end_date = formatDateAccordingToHour(request.data.get("date"), request.data.get("end"))
 		end_job = self.scheduler.get_job(booking_key+"_end")
 		if end_job != None:
 			self.scheduler.remove_job(booking_key+"_end")
@@ -63,7 +69,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 	def destroy(self, request, *args, **kwargs):
 
-		booking_key = request.data["bookingKey"]
+		booking_key = request.data.get("bookingKey")
 
 		start_job = self.scheduler.get_job(booking_key+"_start")
 		if start_job != None:
