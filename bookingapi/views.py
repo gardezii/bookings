@@ -71,6 +71,12 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 		booking_key = request.data.get("bookingKey")
 
+		if booking_key is None: 
+			return Response(data={"bookingKey": ["This field is required"]},status=status.HTTP_400_BAD_REQUEST)
+
+		if  type(booking_key) != str:
+			return Response(data={"bookingKey": ["A valid string is required"]},status=status.HTTP_400_BAD_REQUEST)
+
 		start_job = self.scheduler.get_job(booking_key+"_start")
 		if start_job != None:
 			self.scheduler.remove_job(booking_key+"_start")
