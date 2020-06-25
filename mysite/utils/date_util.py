@@ -1,12 +1,17 @@
 from dateutil.parser import parse
+from datetime import timedelta
 import pytz
+
+def getDateAccordingToHour(date, hour):
+	updated_date =  updateHourInDateTime(date, hour)
+	updated_date = changeDateTimeToUTC(updated_date)
+	return updated_date
 
 def formatDateAccordingToHour(date, hour):
 	updated_date =  updateHourInDateTime(date, hour)
 	updated_date = changeDateTimeToUTC(updated_date)
 	updated_date = updated_date.strftime('%Y-%m-%d %H:%M:%S')
 	return updated_date
-
 
 def changeDateTimeToUTC(datetime_string):
 	datetime_object = parse(datetime_string)
@@ -32,3 +37,9 @@ def convertHourToTwentyFourHour(hour):
 		new_hour_value = 12 + updated_hour
     
 	return new_hour_value
+
+def addDays(date, days):
+	return date + timedelta(days=days)
+
+def formatDate(date, date_format):
+	return date.strftime(date_format)
