@@ -5,6 +5,9 @@ from bookingapi.models import BookingSchedulerHistory
 
 EVENT_TYPE = "booking_trigger"
 
+ON_EVENT =  "fibaro_on_event"
+OFF_EVENT = "fibaro_off_event"
+
 def TurnlightOffTask(ifttt_key, slot_id):
 	try:
 		print("Generating a turn off task notification")
