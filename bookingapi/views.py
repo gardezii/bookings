@@ -31,7 +31,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 		serializer = self.get_serializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
 
-		booking_key = request.data.get("bookingKey")
+		slot_key = request.data.get("slotKey")
 		key = get_Authorization_token(request)
 
 		ifttt_key = APIKey.objects.get_from_key(key)
@@ -47,10 +47,10 @@ class BookingViewSet(viewsets.ModelViewSet):
 			return Response(data={"end": ["end cannot be less then start"]},status=status.HTTP_400_BAD_REQUEST)
 
 		start_date = formatDate(start_date, '%Y-%m-%d %H:%M:%S')
-		self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key }, start_date=start_date, end_date=start_date, id=booking_key+"_start")
+		self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
 
 		end_date = formatDate(end_date, '%Y-%m-%d %H:%M:%S')
-		self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key }, start_date=end_date, end_date=end_date, id=booking_key+"_end")
+		self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
 		
 		return super(BookingViewSet, self).create(request, *args, **kwargs)
 
@@ -68,25 +68,25 @@ class BookingViewSet(viewsets.ModelViewSet):
 		if (end_date < start_date):
 			return Response(data={"end": ["end cannot be less then start"]},status=status.HTTP_400_BAD_REQUEST)
 
-		booking_key = request.data.get("bookingKey")
+		slot_key = request.data.get("slotKey")
 		key = get_Authorization_token(request)
 		
 		ifttt_key = APIKey.objects.get_from_key(key)
 		
-		start_job = self.scheduler.get_job(booking_key+"_start")
+		start_job = self.scheduler.get_job(slot_key+"_start")
 		if start_job != None:
 			# removing job becasue we cannot update the starte and end date due to which 
 			# we need to remove the job and create a new one
-			self.scheduler.remove_job(booking_key+"_start")
+			self.scheduler.remove_job(slot_key+"_start")
 			if start_date >= timezone.now():
 				start_date = formatDate(start_date, '%Y-%m-%d %H:%M:%S')
-				self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key }, start_date=start_date, end_date=start_date, id=booking_key+"_start")
+				self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
 		
 		end_date = formatDate(end_date, '%Y-%m-%d %H:%M:%S')
-		end_job = self.scheduler.get_job(booking_key+"_end")
+		end_job = self.scheduler.get_job(slot_key+"_end")
 		if end_job != None:
-			self.scheduler.remove_job(booking_key+"_end")
-			self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key }, start_date=end_date, end_date=end_date, id=booking_key+"_end")
+			self.scheduler.remove_job(slot_key+"_end")
+			self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
 
 		return super(BookingViewSet, self).update(request, *args, **kwargs)
 
@@ -94,20 +94,20 @@ class BookingViewSet(viewsets.ModelViewSet):
 		if Booking.objects.filter(id = kwargs['pk']).count() == 0: 
 			return Response(data={"detail": "Not found."},status=status.HTTP_404_NOT_FOUND)
 
-		booking_key = request.data.get("bookingKey")
-		if booking_key is None: 
-			return Response(data={"bookingKey": ["This field is required"]},status=status.HTTP_400_BAD_REQUEST)
+		slot_key = request.data.get("slotKey")
+		if slot_key is None: 
+			return Response(data={"slotKey": ["This field is required"]},status=status.HTTP_400_BAD_REQUEST)
 
-		if  type(booking_key) != str:
-			return Response(data={"bookingKey": ["A valid string is required"]},status=status.HTTP_400_BAD_REQUEST)
+		if  type(slot_key) != str:
+			return Response(data={"slotKey": ["A valid string is required"]},status=status.HTTP_400_BAD_REQUEST)
 
-		start_job = self.scheduler.get_job(booking_key+"_start")
+		start_job = self.scheduler.get_job(slot_key+"_start")
 		if start_job != None:
-			self.scheduler.remove_job(booking_key+"_start")
+			self.scheduler.remove_job(slot_key+"_start")
 
-		end_job = self.scheduler.get_job(booking_key+"_end")
+		end_job = self.scheduler.get_job(slot_key+"_end")
 		if end_job != None:
-			self.scheduler.remove_job(booking_key+"_end")
+			self.scheduler.remove_job(slot_key+"_end")
 
 		instance = self.get_object()
 		self.perform_destroy(instance)

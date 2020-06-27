@@ -29,4 +29,15 @@ class Migration(migrations.Migration):
                 ('sumittedDate', models.DateTimeField()),
             ],
         ),
+        migrations.CreateModel(
+            name='BookingSchedulerHistory',
+            fields=[
+                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('job_name', models.CharField(max_length=100)),
+                ('job_type', models.CharField(max_length=100)),
+                ('slot_id', models.CharField(max_length=100)),
+                ('status', models.CharField(max_length=100)),
+                ('event_date', models.DateTimeField()),
+            ],
+        ),
     ]

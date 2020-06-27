@@ -16,3 +16,13 @@ class Booking(models.Model):
 
 	def __str__(self):
 		return self.name
+
+class BookingSchedulerHistory(models.Model):
+	job_name = models.CharField(max_length=100)
+	job_type = models.CharField(max_length=100)
+	slot_id = models.CharField(max_length=100)
+	status = models.CharField(max_length=100)
+	event_date = models.DateTimeField()
+
+	def __str__(self):
+		return self.job_name
