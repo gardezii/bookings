@@ -27,6 +27,14 @@ class BookingViewSet(viewsets.ModelViewSet):
 	permission_classes = [HasAPIKey]
 
 
+	@staticmethod
+	def get_date(request):
+		start_date = getDateAccordingToHour(request.data.get("date"), request.data.get("start"))
+		end_date = getDateAccordingToHour(request.data.get("date"), request.data.get("end"))
+		end_date = addDays(end_date, request.data.get("duration"))
+		return start_date, end_date		
+
+
 	def create(self, request, *args, **kwargs):
 		serializer = self.get_serializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
@@ -36,9 +44,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 		ifttt_key = APIKey.objects.get_from_key(key)
 
-		start_date = getDateAccordingToHour(request.data.get("date"), request.data.get("start"))
-		end_date = getDateAccordingToHour(request.data.get("date"), request.data.get("end"))
-		end_date = addDays(end_date, request.data.get("duration"))
+		start_date, end_date = self.get_date(request)
 
 		if (start_date < timezone.now()):
 			return Response(data={"start": ["start cannot be less then current time value"]},status=status.HTTP_400_BAD_REQUEST)
@@ -47,23 +53,21 @@ class BookingViewSet(viewsets.ModelViewSet):
 			return Response(data={"end": ["end cannot be less then start"]},status=status.HTTP_400_BAD_REQUEST)
 
 		start_date = formatDate(start_date, '%Y-%m-%d %H:%M:%S')
-		self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
+		self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key.name, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
 
 		end_date = formatDate(end_date, '%Y-%m-%d %H:%M:%S')
-		self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
+		self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key.name, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
 		
-		return super(BookingViewSet, self).create(request, *args, **kwargs)
+		return super(BookingViewSet, self).create(request, *args, **kwargs) # move it up before scheduler 
 
 	def update(self, request, *args, **kwargs):
-		if Booking.objects.filter(id = kwargs['pk']).count() == 0: 
+		if Booking.objects.filter(id = kwargs['pk'], slotKey = request.data.get("slotKey")).count() == 0: 
 			return Response(data={"detail": "Not found."},status=status.HTTP_404_NOT_FOUND)
-
+		
 		serializer = self.get_serializer(data=request.data)
 		serializer.is_valid(raise_exception=True)
 
-		start_date = getDateAccordingToHour(request.data.get("date"), request.data.get("start"))
-		end_date = getDateAccordingToHour(request.data.get("date"), request.data.get("end"))
-		end_date = addDays(end_date, request.data.get("duration"))
+		start_date, end_date = self.get_date(request)
 
 		if (end_date < start_date):
 			return Response(data={"end": ["end cannot be less then start"]},status=status.HTTP_400_BAD_REQUEST)
@@ -80,18 +84,18 @@ class BookingViewSet(viewsets.ModelViewSet):
 			self.scheduler.remove_job(slot_key+"_start")
 			if start_date >= timezone.now():
 				start_date = formatDate(start_date, '%Y-%m-%d %H:%M:%S')
-				self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
+				self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key.name, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
 		
 		end_date = formatDate(end_date, '%Y-%m-%d %H:%M:%S')
 		end_job = self.scheduler.get_job(slot_key+"_end")
 		if end_job != None:
 			self.scheduler.remove_job(slot_key+"_end")
-			self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
+			self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key.name, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
 
 		return super(BookingViewSet, self).update(request, *args, **kwargs)
 
 	def destroy(self, request, *args, **kwargs):
-		if Booking.objects.filter(id = kwargs['pk']).count() == 0: 
+		if Booking.objects.filter(id = kwargs['pk'], slotKey = request.data.get("slotKey")).count() == 0: 
 			return Response(data={"detail": "Not found."},status=status.HTTP_404_NOT_FOUND)
 
 		slot_key = request.data.get("slotKey")
