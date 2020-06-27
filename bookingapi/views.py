@@ -26,12 +26,10 @@ class BookingViewSet(viewsets.ModelViewSet):
 	scheduler.start()
 	permission_classes = [HasAPIKey]
 
-
 	@staticmethod
 	def get_date(request):
 		start_date = getDateAccordingToHour(request.data.get("date"), request.data.get("start"))
 		end_date = getDateAccordingToHour(request.data.get("date"), request.data.get("end"))
-		end_date = addDays(end_date, request.data.get("duration"))
 		return start_date, end_date		
 
 
