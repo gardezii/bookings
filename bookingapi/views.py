@@ -7,12 +7,10 @@ from rest_framework_api_key.models import APIKey
 
 from django.utils import timezone
 
-from django_apscheduler.jobstores import DjangoJobStore, register_events
-from apscheduler.schedulers.background import BackgroundScheduler
-
 from mysite.scheduler.scheduler_jobs import TurnlightOnTask, TurnlightOffTask
 from mysite.utils.http_util import get_Authorization_token
 from mysite.utils.date_util import formatDateAccordingToHour, getDateAccordingToHour, addDays, formatDate
+from core.scheduler import scheduler
 
 from .serializers import BookingSerializer
 from .models import Booking
@@ -20,10 +18,7 @@ from .models import Booking
 class BookingViewSet(viewsets.ModelViewSet):
 	queryset = Booking.objects.all().order_by('name')
 	serializer_class = BookingSerializer
-	scheduler = BackgroundScheduler()
-	scheduler.add_jobstore(DjangoJobStore(), "default")
 
-	scheduler.start()
 	permission_classes = [HasAPIKey]
 
 	@staticmethod
@@ -51,10 +46,10 @@ class BookingViewSet(viewsets.ModelViewSet):
 			return Response(data={"end": ["end cannot be less then start"]},status=status.HTTP_400_BAD_REQUEST)
 
 		start_date = formatDate(start_date, '%Y-%m-%d %H:%M:%S')
-		self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key.name, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
+		scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key.name, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
 
 		end_date = formatDate(end_date, '%Y-%m-%d %H:%M:%S')
-		self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key.name, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
+		scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key.name, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
 		
 		return super(BookingViewSet, self).create(request, *args, **kwargs) # move it up before scheduler 
 
@@ -75,20 +70,20 @@ class BookingViewSet(viewsets.ModelViewSet):
 		
 		ifttt_key = APIKey.objects.get_from_key(key)
 		
-		start_job = self.scheduler.get_job(slot_key+"_start")
+		start_job = scheduler.get_job(slot_key+"_start")
 		if start_job != None:
 			# removing job becasue we cannot update the starte and end date due to which 
 			# we need to remove the job and create a new one
-			self.scheduler.remove_job(slot_key+"_start")
+			scheduler.remove_job(slot_key+"_start")
 			if start_date >= timezone.now():
 				start_date = formatDate(start_date, '%Y-%m-%d %H:%M:%S')
-				self.scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key.name, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
+				scheduler.add_job(TurnlightOnTask, "interval", { ifttt_key.name, slot_key }, start_date=start_date, end_date=start_date, id=slot_key+"_start")
 		
 		end_date = formatDate(end_date, '%Y-%m-%d %H:%M:%S')
-		end_job = self.scheduler.get_job(slot_key+"_end")
+		end_job = scheduler.get_job(slot_key+"_end")
 		if end_job != None:
-			self.scheduler.remove_job(slot_key+"_end")
-			self.scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key.name, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
+			scheduler.remove_job(slot_key+"_end")
+			scheduler.add_job(TurnlightOffTask, "interval", { ifttt_key.name, slot_key }, start_date=end_date, end_date=end_date, id=slot_key+"_end")
 
 		return super(BookingViewSet, self).update(request, *args, **kwargs)
 
