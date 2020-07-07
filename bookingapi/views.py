@@ -6,6 +6,8 @@ from rest_framework_api_key.permissions import HasAPIKey
 from rest_framework_api_key.models import APIKey
 
 from django.utils import timezone
+from django.forms.models import model_to_dict
+from django.http import JsonResponse
 
 from mysite.scheduler.scheduler_jobs import TurnlightOnTask, TurnlightOffTask, sendLockCode
 from mysite.utils.http_util import get_Authorization_token
@@ -36,6 +38,12 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 		slot_key = request.data.get("slotKey")
 		key = get_Authorization_token(request)
+
+		#if data already exist return it 
+		if (Booking.objects.filter(slotKey=slot_key).exists()): 
+			booking_data = Booking.objects.get(slotKey=slot_key);
+			data_response = JsonResponse(model_to_dict(booking_data));
+			return data_response
 
 		ifttt_key = APIKey.objects.get_from_key(key)
 
@@ -70,7 +78,6 @@ class BookingViewSet(viewsets.ModelViewSet):
 			sendLockCode(lock_id, start_date, end_date, email, slot_key)
 		else: 	
 			scheduler.add_job(sendLockCode, "interval", { lock_id, start_date, end_date, email, slot_key }, start_date=lock_time, end_date=lock_time, id=slot_key+"_lock")
-		
 		
 		return booking_data
 
