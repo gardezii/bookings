@@ -125,12 +125,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-DEFAULT_FROM_EMAIL = 'gardezisyedmuhammadali@gmail.com'
-SERVER_EMAIL = 'gardezisyedmuhammadali@gmail.com'
+DEFAULT_FROM_EMAIL = '' #enter email over here
+SERVER_EMAIL = '' #enter email over here
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'gardezisyedmuhammadali@gmail.com'
-EMAIL_HOST_PASSWORD = 'Hallelujah*12345'
+EMAIL_HOST_USER = '' #enter email over here
+EMAIL_HOST_PASSWORD = '' #enter password over here
 
 EMAIL_TIME=60
