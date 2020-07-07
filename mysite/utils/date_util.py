@@ -43,3 +43,6 @@ def addDays(date, days):
 
 def formatDate(date, date_format):
 	return date.strftime(date_format)
+
+def subtractMinutes(date, minutes):
+	return date - timedelta(minutes=minutes)

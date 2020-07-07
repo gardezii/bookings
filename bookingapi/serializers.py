@@ -5,4 +5,19 @@ from .models import Booking
 class BookingSerializer(serializers.ModelSerializer):
 		class Meta:
 			model = Booking
-			fields = '__all__'
+			fields = (
+				"id",
+				"slotKey", 
+				"bookingKey",
+				"date",
+				"duration",
+				"end",
+				"location",
+				"name",
+				"pitch",
+				"rate",
+				"start",
+				"status",
+				"sumittedDate",
+				"email"
+				)

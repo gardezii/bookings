@@ -1,5 +1,7 @@
 from django.db import models
 
+from location.models import Location
+
 class Booking(models.Model): 
 	name = models.CharField(max_length=100)
 	location = models.CharField(max_length=100)
@@ -13,6 +15,9 @@ class Booking(models.Model):
 	end = models.CharField(max_length=30)
 	status = models.CharField(max_length=30)
 	sumittedDate = models.DateTimeField()
+	lock_code = models.CharField(max_length=100, blank=True, null=True)
+	email = models.CharField(max_length=100)
+	email_sent = models.BooleanField(blank=True, null=True)
 
 	def __str__(self):
 		return self.name
