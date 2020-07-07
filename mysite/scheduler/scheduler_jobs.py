@@ -58,11 +58,25 @@ def sendLockCode(lock_id, start_date, end_date, email, slot_key):
 		response = requests.post(
 			"https://partnerapi.igloohome.co/v1/locks/"+lock_id+"/lockcodes", 
 			headers={"X-IGLOOHOME-APIKEY": "0PAwT5JCJJe6KLbmJrzyLkmrA9mQDVukBcYEye", "Content-Type": "application/json"},
-			json={"startDate": start_date, "endDate": end_date, "durationCode": 3, description: "lock code"}
+			json={"startDate": start_date, "endDate": end_date, "durationCode": 3, "description": "lock code"}
 		)
-		code = response.json().code
+		print(response)
+		# code = response.json().code
+		mocked_response = {
+			"id":"2nzjUyawaZD5KgCen",
+			"code":"504656525",
+			"durationCode":3,
+			"createdAt":"2020-07-07T04:13:30.684Z",
+			"startDate":"2020-07-07T06:00:00.000Z",
+			"endDate":"2020-07-07T07:00:00.000Z",
+			"_pgVersion":0,
+			"description":"Desc"
+		}
+		# print(mocked_response.json())
+		code  = mocked_response["code"]
 	except Exception as e: 
 		print ("Something went wrong while generating the code")
+		print(e)
 		return
 
 	try: 
