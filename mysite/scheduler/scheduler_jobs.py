@@ -4,8 +4,6 @@ from django.core.mail import EmailMessage
 
 from bookingapi.models import BookingSchedulerHistory, Booking
 
-from mysite.mail.send_mail import send_email
-
 EVENT_TYPE = "booking_notification_trigger"
 
 ON_EVENT =  "fibaro_on_event"
