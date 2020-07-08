@@ -62,7 +62,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 		# Throw error if this date does not exists in our database
 		if location.count() == 0: 
-			return Response(data={"detail": "This location is not supported. Please add this location first before making a booking"},status=status.HTTP_404_NOT_FOUND)
+			return Response(data={"detail": "This location is not supported. Please add this location first before making a booking"},status=status.HTTP_400_BAD_REQUEST)
 
 		lock_time = subtractMinutes(start_date, settings.EMAIL_TIME)
 
@@ -97,7 +97,7 @@ class BookingViewSet(viewsets.ModelViewSet):
 
 		location = Location.objects.filter(name = request.data.get("location"))
 		if location.count() == 0: 
-			return Response(data={"detail": "Updated location is not supported. Please add this location first before making a booking"},status=status.HTTP_404_NOT_FOUND)
+			return Response(data={"detail": "Updated location is not supported. Please add this location first before updating a booking"},status=status.HTTP_400_BAD_REQUEST)
 
 		slot_key = request.data.get("slotKey")
 		key = get_Authorization_token(request)
@@ -127,7 +127,6 @@ class BookingViewSet(viewsets.ModelViewSet):
 				scheduler.add_job(sendLockCode, "interval", { lock_id, start_date, end_date, email, slot_key }, start_date=lock_time, end_date=lock_time, id=slot_key+"_lock")
 			else:
 				sendLockCode(lock_id, start_date, end_date, email, slot_key)
-
 
 		return booking_data
 

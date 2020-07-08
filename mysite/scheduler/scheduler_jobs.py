@@ -17,9 +17,14 @@ def TurnlightOffTask(ifttt_key, slot_id):
 			params={"value1":"off_event"}
 		)
 		saveSchedulerHistory(ifttt_key=ifttt_key, job_type="off_event", slot_id=slot_id, status="success")
+		if req.status_code == 200:
+			return  True
+		else:
+			return False 
 	except Exception as e: 
 		print ("Something went wrong while running the off event scheduler")
 		saveSchedulerHistory(ifttt_key=ifttt_key, job_type="off_event", slot_id=slot_id, status="fail")
+		return False
 
 def TurnlightOnTask(ifttt_key, slot_id):
 	try: 
@@ -29,9 +34,14 @@ def TurnlightOnTask(ifttt_key, slot_id):
 			params={"value1":"on_event"}
 		)
 		saveSchedulerHistory(ifttt_key=ifttt_key, job_type="on_event", slot_id=slot_id, status="success")
+		if req.status_code == 200:
+			return  True
+		else:
+			return False 
 	except Exception as e:
 		print ("Something went wrong while running the off event scheduler")
 		saveSchedulerHistory(ifttt_key=ifttt_key, job_type="on_event", slot_id=slot_id, status="fail")
+		return False
 
 
 def saveSchedulerHistory(ifttt_key, job_type, slot_id, status):
@@ -57,11 +67,12 @@ def sendLockCode(lock_id, start_date, end_date, email, slot_key):
 	except Exception as e: 
 		print ("Something went wrong while generating the code")
 		print(e)
-		return
+		return False
 
 	try: 
 		sendEmail(email, code)
 		email_sent=True
+		print("Email sent successfully")
 	except Exception as e:
 		print("Something went wrong while sending the email")
 	
@@ -69,6 +80,7 @@ def sendLockCode(lock_id, start_date, end_date, email, slot_key):
 	booking.lock_code = code
 	booking.email_sent = email_sent
 	booking.save()
+	return True
 
 def sendEmail(email, code): 
 	try:
